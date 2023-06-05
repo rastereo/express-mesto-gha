@@ -1,29 +1,37 @@
 const Card = require('../models/card');
 
+const BAD_REQUEST_STATUS = 400;
+const NOT_FOUND_STATUS = 404;
+const INTERNAL_SERVER_ERROR_STATUS = 500;
+
 const getCards = (req, res) => {
   Card.find({})
     .then((cards) => res.status(200).send(cards))
-    .catch((err) => res.send(err));
+    .catch((err) => {
+      res
+        .status(INTERNAL_SERVER_ERROR_STATUS)
+        .send({
+          message: `На сервере произошла ошибка: ${err.message}`,
+        });
+    });
 };
 
 const getCardById = (req, res) => {
   Card.findById(req.params.cardId)
     .orFail(() => new Error('Not found'))
-    .then((card) => res.status(201).send(card))
+    .then((card) => res.status(200).send(card))
     .catch((err) => {
       if (err.message === 'Not found') {
         res
-          .status(404)
+          .status(NOT_FOUND_STATUS)
           .send({
-            message: 'Card not found',
+            message: `Карточка с указанным id(${req.params.cardId}) не найдена.`,
           });
       } else {
         res
-          .status(500)
+          .status(INTERNAL_SERVER_ERROR_STATUS)
           .send({
-            message: 'Internal Server Error',
-            err: err.message,
-            stack: err.stack,
+            message: `На сервере произошла ошибка: ${err.message}`,
           });
       }
     });
@@ -36,15 +44,17 @@ const createCard = (req, res) => {
   })
     .then((card) => res.status(201).send(card))
     .catch((err) => {
-      if (err.message.includes('validation failed')) {
-        res.status(400).send({ message: 'Вы ввели некоректные данные' });
+      if (err.name === 'ValidationError') {
+        res
+          .status(BAD_REQUEST_STATUS)
+          .send({
+            message: 'Переданы некорректные данные при создании карточки.',
+          });
       } else {
         res
-          .status(500)
+          .status(INTERNAL_SERVER_ERROR_STATUS)
           .send({
-            message: 'Internal Server Error',
-            err: err.message,
-            stack: err.stack,
+            message: `На сервере произошла ошибка: ${err.message}`,
           });
       }
     });
@@ -52,8 +62,23 @@ const createCard = (req, res) => {
 
 const deleteCard = (req, res) => {
   Card.findByIdAndDelete(req.params.cardId)
+    .orFail(() => new Error('Not found'))
     .then((card) => res.status(200).send(card))
-    .catch((err) => res.send(err));
+    .catch((err) => {
+      if (err.message === 'Not found') {
+        res
+          .status(NOT_FOUND_STATUS)
+          .send({
+            message: `Карточка с указанным id(${req.params.cardId}) не найдена.`,
+          });
+      } else {
+        res
+          .status(INTERNAL_SERVER_ERROR_STATUS)
+          .send({
+            message: `На сервере произошла ошибка: ${err.message}`,
+          });
+      }
+    });
 };
 
 const likeCard = (req, res) => {
@@ -62,8 +87,29 @@ const likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
+    .orFail(() => new Error('Not found'))
     .then((card) => res.status(200).send(card))
-    .catch((err) => res.send(err));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res
+          .status(BAD_REQUEST_STATUS)
+          .send({
+            message: 'Переданы некорректные данные для постановки лайка.',
+          });
+      } else if (err.message === 'Not found') {
+        res
+          .status(NOT_FOUND_STATUS)
+          .send({
+            message: `Карточка с указанным id(${req.params.cardId}) не найдена.`,
+          });
+      } else {
+        res
+          .status(INTERNAL_SERVER_ERROR_STATUS)
+          .send({
+            message: `На сервере произошла ошибка: ${err.message}`,
+          });
+      }
+    });
 };
 
 const dislikeCard = (req, res) => {
@@ -72,8 +118,29 @@ const dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
+    .orFail(() => new Error('Not found'))
     .then((card) => res.status(200).send(card))
-    .catch((err) => res.send(err));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res
+          .status(BAD_REQUEST_STATUS)
+          .send({
+            message: 'Переданы некорректные данные для снятии лайка.',
+          });
+      } else if (err.message === 'Not found') {
+        res
+          .status(NOT_FOUND_STATUS)
+          .send({
+            message: `Карточка с указанным id(${req.params.cardId}) не найдена.`,
+          });
+      } else {
+        res
+          .status(INTERNAL_SERVER_ERROR_STATUS)
+          .send({
+            message: `На сервере произошла ошибка: ${err.message}`,
+          });
+      }
+    });
 };
 
 module.exports = {
