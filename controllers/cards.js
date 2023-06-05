@@ -65,7 +65,13 @@ const deleteCard = (req, res) => {
     .orFail(() => new Error('Not found'))
     .then((card) => res.status(200).send(card))
     .catch((err) => {
-      if (err.message === 'Not found') {
+      if (err.name === 'CastError') {
+        res
+          .status(BAD_REQUEST_STATUS)
+          .send({
+            message: 'Переданы некорректный id для удаления карточки.',
+          });
+      } else if (err.message === 'Not found') {
         res
           .status(NOT_FOUND_STATUS)
           .send({
@@ -90,7 +96,7 @@ const likeCard = (req, res) => {
     .orFail(() => new Error('Not found'))
     .then((card) => res.status(200).send(card))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res
           .status(BAD_REQUEST_STATUS)
           .send({
@@ -121,7 +127,7 @@ const dislikeCard = (req, res) => {
     .orFail(() => new Error('Not found'))
     .then((card) => res.status(200).send(card))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         res
           .status(BAD_REQUEST_STATUS)
           .send({
@@ -136,9 +142,7 @@ const dislikeCard = (req, res) => {
       } else {
         res
           .status(INTERNAL_SERVER_ERROR_STATUS)
-          .send({
-            message: `На сервере произошла ошибка: ${err.message}`,
-          });
+          .send(err);
       }
     });
 };

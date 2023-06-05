@@ -21,7 +21,13 @@ const getUserById = (req, res) => {
     .orFail(() => new Error('Not found'))
     .then((user) => res.status(200).send(user))
     .catch((err) => {
-      if (err.message === 'Not found') {
+      if (err.name === 'CastError') {
+        res
+          .status(BAD_REQUEST_STATUS)
+          .send({
+            message: 'Переданы некорректные данные для получения пользователя.',
+          });
+      } else if (err.message === 'Not found') {
         res
           .status(404)
           .send({
