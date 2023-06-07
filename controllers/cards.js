@@ -1,8 +1,9 @@
 const Card = require('../models/card');
-
-const BAD_REQUEST_STATUS = 400;
-const NOT_FOUND_STATUS = 404;
-const INTERNAL_SERVER_ERROR_STATUS = 500;
+const {
+  BAD_REQUEST_STATUS,
+  NOT_FOUND_STATUS,
+  INTERNAL_SERVER_ERROR_STATUS,
+} = require('../utils/serverErrorStatusConstants');
 
 const getCards = (req, res) => {
   Card.find({})
@@ -13,27 +14,6 @@ const getCards = (req, res) => {
         .send({
           message: `На сервере произошла ошибка: ${err.message}`,
         });
-    });
-};
-
-const getCardById = (req, res) => {
-  Card.findById(req.params.cardId)
-    .orFail(() => new Error('Not found'))
-    .then((card) => res.status(200).send(card))
-    .catch((err) => {
-      if (err.message === 'Not found') {
-        res
-          .status(NOT_FOUND_STATUS)
-          .send({
-            message: `Карточка с указанным id(${req.params.cardId}) не найдена.`,
-          });
-      } else {
-        res
-          .status(INTERNAL_SERVER_ERROR_STATUS)
-          .send({
-            message: `На сервере произошла ошибка: ${err.message}`,
-          });
-      }
     });
 };
 
@@ -142,14 +122,15 @@ const dislikeCard = (req, res) => {
       } else {
         res
           .status(INTERNAL_SERVER_ERROR_STATUS)
-          .send(err);
+          .send({
+            message: `На сервере произошла ошибка: ${err.message}`,
+          });
       }
     });
 };
 
 module.exports = {
   getCards,
-  getCardById,
   createCard,
   deleteCard,
   likeCard,

@@ -1,8 +1,9 @@
 const User = require('../models/user');
-
-const BAD_REQUEST_STATUS = 400;
-const NOT_FOUND_STATUS = 404;
-const INTERNAL_SERVER_ERROR_STATUS = 500;
+const {
+  BAD_REQUEST_STATUS,
+  NOT_FOUND_STATUS,
+  INTERNAL_SERVER_ERROR_STATUS,
+} = require('../utils/serverErrorStatusConstants');
 
 const getUsers = (req, res) => {
   User.find({})
@@ -29,7 +30,7 @@ const getUserById = (req, res) => {
           });
       } else if (err.message === 'Not found') {
         res
-          .status(404)
+          .status(NOT_FOUND_STATUS)
           .send({
             message: `Пользователь по указанному id(${req.params.userId}) не найден`,
           });
@@ -49,7 +50,7 @@ const createUser = (req, res) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res
-          .status(400)
+          .status(BAD_REQUEST_STATUS)
           .send({
             message: 'Переданы некорректные данные при создании пользователя.',
           });
