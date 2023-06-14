@@ -1,9 +1,15 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+
 const {
   BAD_REQUEST_STATUS,
+  UNAUTHORIZED_STATUS,
   NOT_FOUND_STATUS,
   INTERNAL_SERVER_ERROR_STATUS,
 } = require('../utils/serverErrorStatusConstants');
+
+const { NODE_ENV, JWT_SECRET } = process.env;
 
 const getUsers = (req, res) => {
   User.find({})
@@ -45,7 +51,11 @@ const getUserById = (req, res) => {
 };
 
 const createUser = (req, res) => {
-  User.create(req.body)
+  bcrypt.hash(req.body.password, 10)
+    .then((hash) => User.create({
+      ...req.body,
+      password: hash,
+    }))
     .then((user) => res.status(201).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -139,10 +149,45 @@ const updateAvatar = (req, res) => {
     });
 };
 
+const loginUser = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign(
+        { _id: user._id },
+        NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
+        { expiresIn: '7d' },
+      );
+
+      res
+        .status(200)
+        .cookie('jwt', token, {
+          maxAge: 604800000,
+          httpOnly: true,
+        })
+        .end();
+    })
+    .catch((err) => {
+      if (err.message === 'Неправильные почта или пароль.') {
+        res
+          .status(UNAUTHORIZED_STATUS)
+          .send({ message: err.message });
+      } else {
+        res
+          .status(INTERNAL_SERVER_ERROR_STATUS)
+          .send({
+            message: `На сервере произошла ошибка: ${err.message}`,
+          });
+      }
+    });
+};
+
 module.exports = {
   getUsers,
   getUserById,
   createUser,
   updateUser,
   updateAvatar,
+  loginUser,
 };

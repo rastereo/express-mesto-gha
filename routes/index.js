@@ -1,8 +1,7 @@
 const router = require('express').Router();
 const userRoutes = require('./users');
 const cardRoutes = require('./cards');
-
-const NOT_FOUND_STATUS = 404;
+const { NOT_FOUND_STATUS } = require('../utils/serverErrorStatusConstants');
 
 router.use('/users', userRoutes);
 

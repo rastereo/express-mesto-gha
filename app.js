@@ -1,6 +1,9 @@
+require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const router = require('./routes');
+const { loginUser, createUser } = require('./controllers/users');
 
 const { PORT = 3000 } = process.env;
 
@@ -15,6 +18,9 @@ app.use((req, res, next) => {
 
   next();
 });
+
+app.post('/signin', loginUser);
+app.post('/signup', createUser);
 
 app.use(router);
 
