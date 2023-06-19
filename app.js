@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 
 const router = require('./routes');
 const { loginUser, createUser } = require('./controllers/users');
+const { errorHandler } = require('./middlewares/error');
 
 const { PORT = 3000 } = process.env;
 
@@ -19,6 +20,8 @@ app.post('/signin', loginUser);
 app.post('/signup', createUser);
 
 app.use(router);
+
+app.use(errorHandler);
 
 mongoose.connect('mongodb://localhost:27017/mestodb', {
   useNewUrlParser: true,
