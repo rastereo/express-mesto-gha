@@ -1,11 +1,14 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+
 const User = require('../models/user');
 
 const {
   BAD_REQUEST_STATUS,
   UNAUTHORIZED_STATUS,
+  FORBIDDEN_STATUS,
   NOT_FOUND_STATUS,
+  CONFLIICT_STATUS,
   INTERNAL_SERVER_ERROR_STATUS,
 } = require('../utils/serverErrorStatusConstants');
 
@@ -24,7 +27,7 @@ const getUsers = (req, res) => {
 };
 
 const getUserById = (req, res) => {
-  User.findById(req.params.userId)
+  User.findById(req.params.userId || req.user._id)
     .orFail(() => new Error('Not found'))
     .then((user) => res.status(200).send(user))
     .catch((err) => {
@@ -51,7 +54,7 @@ const getUserById = (req, res) => {
 };
 
 const createUser = (req, res) => {
-  bcrypt.hash(req.body.password, 10)
+  bcrypt.hash(String(req.body.password), 10)
     .then((hash) => User.create({
       ...req.body,
       password: hash,
@@ -63,6 +66,12 @@ const createUser = (req, res) => {
           .status(BAD_REQUEST_STATUS)
           .send({
             message: 'Переданы некорректные данные при создании пользователя.',
+          });
+      } else if (err.code === 11000) {
+        res
+          .status(CONFLIICT_STATUS)
+          .send({
+            message: 'При регистрации указан email, который уже существует на сервере.',
           });
       } else {
         res
@@ -79,10 +88,7 @@ const updateUser = (req, res) => {
 
   User.findByIdAndUpdate(
     req.user._id,
-    {
-      name,
-      about,
-    },
+    { name, about },
     {
       new: true,
       runValidators: true,
@@ -152,6 +158,12 @@ const updateAvatar = (req, res) => {
 const loginUser = (req, res) => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res
+      .status(FORBIDDEN_STATUS)
+      .send({ message: 'Отсутствуют необходимые данные' });
+  }
+
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign(
@@ -163,8 +175,9 @@ const loginUser = (req, res) => {
       res
         .status(200)
         .cookie('jwt', token, {
-          maxAge: 604800000,
+          maxAge: 604800,
           httpOnly: true,
+          sameSite: true,
         })
         .end();
     })

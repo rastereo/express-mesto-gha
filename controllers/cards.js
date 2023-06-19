@@ -1,13 +1,14 @@
 const Card = require('../models/card');
 const {
   BAD_REQUEST_STATUS,
+  FORBIDDEN_STATUS,
   NOT_FOUND_STATUS,
   INTERNAL_SERVER_ERROR_STATUS,
 } = require('../utils/serverErrorStatusConstants');
 
 const getCards = (req, res) => {
   Card.find({})
-    .then((cards) => res.status(200).send(cards))
+    .then((cards) => res.status(200).send({ cards }))
     .catch((err) => {
       res
         .status(INTERNAL_SERVER_ERROR_STATUS)
@@ -41,9 +42,16 @@ const createCard = (req, res) => {
 };
 
 const deleteCard = (req, res) => {
-  Card.findByIdAndDelete(req.params.cardId)
+  Card.findById(req.params.cardId)
     .orFail(() => new Error('Not found'))
-    .then((card) => res.status(200).send(card))
+    .then((card) => {
+      if (!card.owner.equals(req.user._id)) {
+        return Promise.reject(new Error('Попытка удалить чужую карточку'));
+      }
+
+      return Card.deleteOne(card)
+        .then((deleted) => res.send({ deleted, card }));
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
         res
@@ -57,6 +65,10 @@ const deleteCard = (req, res) => {
           .send({
             message: `Карточка с указанным id(${req.params.cardId}) не найдена.`,
           });
+      } else if (err.message === 'Попытка удалить чужую карточку') {
+        res
+          .status(FORBIDDEN_STATUS)
+          .send({ message: err.message });
       } else {
         res
           .status(INTERNAL_SERVER_ERROR_STATUS)

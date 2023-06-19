@@ -2,6 +2,8 @@ require('dotenv').config();
 
 const express = require('express');
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
+
 const router = require('./routes');
 const { loginUser, createUser } = require('./controllers/users');
 
@@ -11,13 +13,7 @@ const app = express();
 
 app.use(express.json());
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '647b6f8d7302287e4f8fe6b9',
-  };
-
-  next();
-});
+app.use(cookieParser());
 
 app.post('/signin', loginUser);
 app.post('/signup', createUser);

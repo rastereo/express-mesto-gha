@@ -1,7 +1,11 @@
 const router = require('express').Router();
+
 const userRoutes = require('./users');
 const cardRoutes = require('./cards');
+const auth = require('../middlewares/auth');
 const { NOT_FOUND_STATUS } = require('../utils/serverErrorStatusConstants');
+
+router.use(auth);
 
 router.use('/users', userRoutes);
 
