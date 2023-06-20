@@ -26,12 +26,16 @@ app.post('/signup', celebrate({
   [Segments.BODY]: Joi.object().keys({
     email: Joi.string().required().email(),
     password: Joi.string().required().min(8),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
   }),
 }), createUser);
 app.post('/signin', celebrate({
   [Segments.BODY]: Joi.object().keys({
     email: Joi.string().required().email(),
     password: Joi.string().required().min(8),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
   }),
 }), loginUser);
 
