@@ -61,7 +61,7 @@ const errorHandler = (err, req, res, next) => {
 
   if (err.name === 'CastError' || err.name === 'ValidationError') {
     error = new BadRequestError(err);
-  } else if (err.message === 'Неправильная почта или пароль.' || err.name === 'JsonWebTokenError') {
+  } else if (err.name === 'JsonWebTokenError' || err.message === 'Неправильная почта или пароль.') {
     error = new UnauthorizedError(err);
   } else if (err.message === 'Попытка удалить чужую карточку.') {
     error = new ForbiddenError(err);
