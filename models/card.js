@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
 
-const regexUrl = require('../utils/regexConstants');
-
 const cardSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -13,7 +11,8 @@ const cardSchema = new mongoose.Schema({
     type: String,
     required: true,
     validate: {
-      validator: (v) => regexUrl.test(v),
+      // eslint-disable-next-line no-useless-escape
+      validator: (v) => /^(https?:\/\/)(www.)?(\w[\w\.\-\_\~\:\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=]{1,})(\.\w{1,})([\w\.\-\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=]{1,})?/gmi.test(v),
       message: 'Неправильный формат ссылки',
     },
   },

@@ -2,8 +2,6 @@ const mongoose = require('mongoose');
 const isEmail = require('validator/lib/isEmail');
 const bcrypt = require('bcryptjs');
 
-const regexUrl = require('../utils/regexConstants');
-
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -21,7 +19,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     validate: {
-      validator: (v) => regexUrl.test(v),
+      // eslint-disable-next-line no-useless-escape
+      validator: (v) => /^(https?:\/\/)(www.)?(\w[\w\.\-\_\~\:\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=]{1,})(\.\w{1,})([\w\.\-\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=]{1,})?/gmi.test(v),
       message: 'Неправильный формат ссылки',
     },
   },
@@ -60,6 +59,15 @@ userSchema.statics.findUserByCredentials = function (email, password) {
           return user;
         });
     });
+};
+
+// eslint-disable-next-line func-names
+userSchema.methods.toJSON = function () {
+  const user = this.toObject();
+
+  delete user.password;
+
+  return user;
 };
 
 module.exports = mongoose.model('user', userSchema);

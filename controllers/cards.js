@@ -2,7 +2,7 @@ const Card = require('../models/card');
 
 const getCards = (req, res, next) => {
   Card.find({})
-    .then((cards) => res.status(200).send({ cards }))
+    .then((cards) => res.status(200).send({ data: cards }))
     .catch(next);
 };
 
@@ -11,7 +11,7 @@ const createCard = (req, res, next) => {
     ...req.body,
     owner: req.user._id,
   })
-    .then((card) => res.status(201).send(card))
+    .then((card) => res.status(201).send({ data: card }))
     .catch(next);
 };
 
@@ -24,7 +24,7 @@ const deleteCard = (req, res, next) => {
       }
 
       return Card.deleteOne(card)
-        .then((deleted) => res.send({ deleted, card }));
+        .then((deleted) => res.send({ deleted, data: card }));
     })
     .catch(next);
 };
@@ -36,7 +36,7 @@ const likeCard = (req, res, next) => {
     { new: true },
   )
     .orFail(() => new Error('Not found'))
-    .then((card) => res.status(200).send(card))
+    .then((card) => res.status(200).send({ data: card }))
     .catch(next);
 };
 
@@ -47,7 +47,7 @@ const dislikeCard = (req, res, next) => {
     { new: true },
   )
     .orFail(() => new Error('Not found'))
-    .then((card) => res.status(200).send(card))
+    .then((card) => res.status(200).send({ data: card }))
     .catch(next);
 };
 
