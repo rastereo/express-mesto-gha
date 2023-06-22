@@ -12,32 +12,32 @@ const {
   likeCard,
   dislikeCard,
 } = require('../controllers/cards');
+const regexUrl = require('../utils/regexConstants');
 
 router.get('/', getCards);
 
 router.post('/', celebrate({
   [Segments.BODY]: Joi.object().keys({
     name: Joi.string().required().min(2).max(30),
-    // eslint-disable-next-line no-useless-escape
-    link: Joi.string().required().regex(/^(https?:\/\/)(www.)?(\w[\w\.\-\_\~\:\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=]{1,})(\.\w{1,})([\w\.\-\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=]{1,})?/),
+    link: Joi.string().required().regex(regexUrl),
   }),
 }), createCard);
 
 router.delete('/:cardId', celebrate({
   [Segments.PARAMS]: Joi.object().keys({
-    cardId: Joi.string().alphanum().min(24),
+    cardId: Joi.string().required().hex().length(24),
   }),
 }), deleteCard);
 
 router.put('/:cardId/likes', celebrate({
   [Segments.PARAMS]: Joi.object().keys({
-    cardId: Joi.string().alphanum().min(24),
+    cardId: Joi.string().required().hex().length(24),
   }),
 }), likeCard);
 
 router.delete('/:cardId/likes', celebrate({
   [Segments.PARAMS]: Joi.object().keys({
-    cardId: Joi.string().alphanum().min(24),
+    cardId: Joi.string().required().hex().length(24),
   }),
 }), dislikeCard);
 

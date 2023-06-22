@@ -11,8 +11,9 @@ const {
 } = require('celebrate');
 
 const router = require('./routes');
-const { loginUser, createUser } = require('./controllers/users');
+const { loginUser, createUser, logoutUser } = require('./controllers/users');
 const { errorHandler } = require('./middlewares/error');
+const regexUrl = require('./utils/regexConstants');
 
 const { PORT = 3000 } = process.env;
 
@@ -28,20 +29,16 @@ app.post('/signup', celebrate({
     password: Joi.string().required().min(8),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    // eslint-disable-next-line no-useless-escape
-    avatar: Joi.string().regex(/^(https?:\/\/)(www.)?(\w[\w\.\-\_\~\:\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=]{1,})(\.\w{1,})([\w\.\-\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=]{1,})?/),
+    avatar: Joi.string().regex(regexUrl),
   }),
 }), createUser);
 app.post('/signin', celebrate({
   [Segments.BODY]: Joi.object().keys({
     email: Joi.string().required().email(),
     password: Joi.string().required().min(8),
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    // eslint-disable-next-line no-useless-escape
-    avatar: Joi.string().regex(/^(https?:\/\/)(www.)?(\w[\w\.\-\_\~\:\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=]{1,})(\.\w{1,})([\w\.\-\_\~\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=]{1,})?/),
   }),
 }), loginUser);
+app.get('/signout', logoutUser);
 
 app.use(router);
 

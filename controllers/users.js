@@ -2,19 +2,22 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
+const NotFoundError = require('../components/NotFoundError');
+const BadRequestError = require('../components/BadRequestError');
+const ConflictError = require('../components/ConflictError');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
 const getUsers = (req, res, next) => {
   User.find({})
-    .then((users) => res.status(200).send({ data: users }))
+    .then((users) => res.send({ data: users }))
     .catch(next);
 };
 
 const getUserById = (req, res, next) => {
   User.findById(req.params.userId || req.user._id)
-    .orFail(() => new Error('Not found'))
-    .then((user) => res.status(200).send({ data: user }))
+    .orFail(() => new NotFoundError('Пользователя с указанным id не существует.'))
+    .then((user) => res.send({ data: user }))
     .catch(next);
 };
 
@@ -25,7 +28,15 @@ const createUser = (req, res, next) => {
       password: hash,
     }))
     .then((user) => res.status(201).send({ data: user.toJSON() }))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Переданы некорректные данные при создании пользователя.'));
+      } else if (err.code === 11000) {
+        next(new ConflictError('При регистрации указан email, который уже существует на сервере.'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const updateUser = (req, res, next) => {
@@ -39,9 +50,17 @@ const updateUser = (req, res, next) => {
       runValidators: true,
     },
   )
-    .orFail(() => new Error('Not found'))
-    .then((user) => res.status(200).send({ data: user }))
-    .catch(next);
+    .orFail(() => new NotFoundError('Пользователя с указанным id не существует.'))
+    .then((user) => res.send({ data: user }))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Переданы некорректные данные при обновлении профиля.'));
+      } else if (err.code === 11000) {
+        next(new ConflictError('При регистрации указан email, который уже существует на сервере.'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const updateAvatar = (req, res, next) => {
@@ -55,9 +74,17 @@ const updateAvatar = (req, res, next) => {
       runValidators: true,
     },
   )
-    .orFail(() => new Error('Not found'))
-    .then((user) => res.status(200).send({ data: user }))
-    .catch(next);
+    .orFail(() => new NotFoundError('Пользователя с указанным id не существует.'))
+    .then((user) => res.send({ data: user }))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Переданы некорректные данные при обновлении аватара.'));
+      } else if (err.code === 11000) {
+        next(new ConflictError('При регистрации указан email, который уже существует на сервере.'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const loginUser = (req, res, next) => {
@@ -72,7 +99,6 @@ const loginUser = (req, res, next) => {
       );
 
       res
-        .status(200)
         .cookie('jwt', token, {
           maxAge: 604800,
           httpOnly: true,
@@ -83,6 +109,12 @@ const loginUser = (req, res, next) => {
     .catch(next);
 };
 
+const logoutUser = (req, res) => {
+  res
+    .clearCookie('jwt')
+    .send({ message: 'Выход' });
+};
+
 module.exports = {
   getUsers,
   getUserById,
@@ -90,4 +122,5 @@ module.exports = {
   updateUser,
   updateAvatar,
   loginUser,
+  logoutUser,
 };

@@ -14,15 +14,11 @@ const {
 
 router.get('/', getUsers);
 
-router.get('/me', celebrate({
-  [Segments.PARAMS]: Joi.object().keys({
-    userId: Joi.string().alphanum().min(24),
-  }),
-}), getUserById);
+router.get('/me', getUserById);
 
 router.get('/:userId', celebrate({
   [Segments.PARAMS]: Joi.object().keys({
-    userId: Joi.string().alphanum().min(24),
+    userId: Joi.string().required().hex().length(24),
   }),
 }), getUserById);
 
